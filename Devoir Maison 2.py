@@ -462,6 +462,9 @@ def affichage_MNP(n):
 ##====================Méthode des solutions manufacturées=================================
 ##========================================================================================
 
+#Cas stationnaire
+
+
 C0 = -Ce
 Pi = np.pi
 
@@ -522,4 +525,36 @@ def affichage_MMS(n):
     plt.plot(X, Z)
     plt.show()
     
+#Cas non stationnaire
+t0 = 1
+from numpy import exp
 
+
+def Terme_source_instationnaire(t, r):
+    if r ==0:
+        return -(Deff*(Pi*C0/R + (Pi*C0/R)**2) - K*C0 + 1/t0) * exp(t/t0) 
+    else :
+        return (-Deff*(Pi*C0/R*sin(Pi/R*r)/r + C0*(Pi/R)**2*cos(Pi/R*r)) - K*C0*cos(Pi/R*r) + cos(Pi*r/R)/t0)*exp(t/t0)
+    
+def calcul_instationnaire(n, nt, delta_t):
+    h = R/(n-1)
+    L = [0 for i in range (n)] 
+    for j in range (nt):
+        M = [] #On créer une matrice M pour calculer les valeurs aux différents noeuds au pas de temps suivants.
+        M.append(0)
+        for k in range (1, n-1):
+            M.append( L[k] + delta_t*Deff/h/h*(L[k+1]*(1 + h/2/k) - L[k]*(2 + h**2*k/Deff)+ L[k-1]*(1-h/2/k)) - Terme_source_instationnaire(j, k))
+        M.append(Ce)    
+        L = M    
+        L[0] = L[1] # On a la condition initiale de la dérivée nul en 0. Donc C(T + dT, 0) = C(T + DT, R/4)
+    return L
+
+def affichage_instationnaire(n, nt, delta_t):
+    X = np.linspace(0, 1, n)
+    Y = []
+    for k in range(n):
+        Y.append(Solution_analytique_MMS(k*R/(n-1)))
+    Z = calcul_instationnaire(n, nt, delta_t)
+    plt.plot(X, Y)
+    plt.plot(X, Z)
+    plt.show()
